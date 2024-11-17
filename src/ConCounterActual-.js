@@ -6,7 +6,9 @@ class CounterApp extends LitElement {
     siteData: { type: Object },
     pageData: { type: Array },
     url: { type: String },
-    searchTerm: { type: String }
+    searchTerm: { type: String },
+    items: { type: Array },
+    title: { type: String }
   };
 
   constructor() {
@@ -17,54 +19,56 @@ class CounterApp extends LitElement {
       logo: "https://avatars.githubusercontent.com/u/12715666?s=200&v=4",
       theme: "HAX",
       created: "11/3/2024",
-      lastUpdated: "11/3/2024",
+      lastUpdated: "11/12/2024",
       color: "Red"
     };
     this.pageData = [
       {
         title: "HaxTheWeb",
-        lastUpdated: "11/10/2024",
+        lastUpdated: "11/12/2024",
         description: "Main page of Hax The Web allowing you to get involved too!",
         contentLink: "https://haxtheweb.org/",
         sourceLink: "source.html"
       },
       {
         title: "What do we do?",
-        lastUpdated: "11/10/2024",
+        lastUpdated: "11/12/2024",
         description: "Hax fully integrates design capabilities with what someone is creating. More information can be found at the site offered below.",
         contentLink: "https://haxtheweb.org/welcome/why-hax",
         sourceLink: "source.html"
       },
       {
         title: "Get involved!",
-        lastUpdated: "11/10/2024",
-        description: "Join us at our monthly meet-up for core developers and contributing groups as well as a bi-monthly meet-up for our end users. We als offer HAX Camp, a chance to learn and develop web components for the HAX ecosystem.",
+        lastUpdated: "11/12/2024",
+        description: "Join us at our monthly meet-up for core developers and contributing groups as well as a bi-monthly meet-up for our end users. We also offer HAX Camp, a chance to learn and develop web components for the HAX ecosystem.",
         contentLink: "https://haxtheweb.org/community",
         sourceLink: "source.html"
       },
       {
         title: "Hax Lab",
-        lastUpdated: "11/10/2024",
-        description: "Hax Lab is the group responsible for educating student contributors along with the upkeep of HAX. ",
+        lastUpdated: "11/12/2024",
+        description: "Hax Lab is the group responsible for educating student contributors along with the upkeep of HAX.",
         contentLink: "https://haxtheweb.org/hax-lab",
         sourceLink: "source.html"
       },
       {
         title: "Use Hax yourself!",
-        lastUpdated: "11/10/2024",
-        description: "We can quickly get you started  with our CLI tools no cost. We are focused on low tech implementations to empower as many voices as possible.",
+        lastUpdated: "11/12/2024",
+        description: "We can quickly get you started with our CLI tools at no cost. We are focused on low-tech implementations to empower as many voices as possible.",
         contentLink: "https://haxtheweb.org/documentation/hax-frontend-devs",
         sourceLink: "source.html"
       },
       {
         title: "Catch up to speed on terminology!",
-        lastUpdated: "11/10/2024",
-        description: "This site contaitns a list of common buzzwords and terminology descriptions to aid in the understanding of the rest of our work.",
+        lastUpdated: "11/12/2024",
+        description: "This site contains a list of common buzzwords and terminology descriptions to aid in the understanding of the rest of our work.",
         contentLink: "https://haxtheweb.org/welcome/terminology",
         sourceLink: "source.html"
       }
     ];
     this.searchTerm = '';
+    this.items = [];
+    this.title = '';
   }
 
   static styles = css`
@@ -159,40 +163,92 @@ class CounterApp extends LitElement {
     `);
     newWindow.document.close();
   }
+
   async analyzeSite() {
-    const url = this.searchTerm.trim();
+    let url = this.searchTerm.trim();
     if (!url) {
       alert('Please enter a valid URL.');
       return;
     }
-  
+
+    url = url.endsWith('/') ? url.slice(0, -1) : url;
+
     const siteJsonUrl = url.endsWith('site.json') ? url : `${url}/site.json`;
-  
+
     try {
       const response = await fetch(siteJsonUrl);
       if (!response.ok) {
-        throw new Error('Failed to fetch site.json');
+        throw new Error(`Failed to fetch site.json (Status: ${response.status})`);
       }
-  
+
       const data = await response.json();
-      this.validateSiteData(data);
-  
-      // Once validated, update siteData and pageData
-      this.siteData = data;
-      this.pageData = data.items || []; // Assuming items is an array in site.json
+      const normalizedData = this.normalizeSiteData(data);
+      this.items = normalizedData.items || [];
+      this.title = normalizedData.name || '';
+      this.siteData = {
+        ...normalizedData,
+        items: undefined 
+      };
+      
+      this.pageData = this.items.map(item => ({
+        title: item.title || item.name || '',
+        lastUpdated: item.lastUpdated || item.metadata?.updated || 'N/A',
+        description: item.description || item.metadata?.description || '',
+        contentLink: item.location || item.url || item.path || '#',
+        sourceLink: item.source || 'source.html'
+      }));
+
+      console.log('Successfully loaded site data:', {
+        title: this.title,
+        itemCount: this.items.length,
+        siteData: this.siteData
+      });
+
     } catch (error) {
-      console.error(error);
-      alert('Error fetching site data or invalid site.json');
+      console.error('Error loading site data:', error);
+      alert(`Error loading site data: ${error.message}`);
     }
   }
-  
-  validateSiteData(data) {
-    const requiredFields = ['name', 'description', 'logo', 'theme', 'created', 'lastUpdated', 'color', 'items'];
-    for (let field of requiredFields) {
-      if (!(field in data)) {
-        throw new Error(`Missing required field: ${field}`);
-      }
+
+  normalizeSiteData(data) {
+    const defaultData = {
+      name: data.name || data.title || 'Untitled Site',
+      description: data.description || data.about || 'No description available',
+      logo: data.logo || data.icon || 'https://avatars.githubusercontent.com/u/12715666?s=200&v=4',
+      theme: data.theme || 'HAX',
+      created: data.created || data.metadata?.created || 'N/A',
+      lastUpdated: data.lastUpdated || data.metadata?.updated || new Date().toLocaleDateString(),
+      color: data.color || 'Red'
+    };
+
+    let items = [];
+    if (data.items) {
+      items = data.items;
+    } else if (data.content) {
+      items = Array.isArray(data.content) ? data.content : [data.content];
+    } else if (data.pages) {
+      items = data.pages;
+    } else {
+      items = [{
+        title: data.name || data.title,
+        description: data.description || data.about,
+        url: data.url || data.location,
+        lastUpdated: data.lastUpdated || data.metadata?.updated
+      }];
     }
+
+    const normalizedItems = items.map(item => ({
+      title: item.title || item.name || 'Untitled',
+      description: item.description || item.about || 'No description available',
+      lastUpdated: item.lastUpdated || item.metadata?.updated || 'N/A',
+      location: item.location || item.url || item.path || '#',
+      source: item.source || ''
+    }));
+
+    return {
+      ...defaultData,
+      items: normalizedItems
+    };
   }
 
   render() {
@@ -213,19 +269,19 @@ class CounterApp extends LitElement {
       </div>
 
       <div class="search-bar">
-  <input
-    type="text"
-    placeholder="Enter site URL..."
-    @input="${this.updateSearchTerm}"
-  />
-  <button @click="${this.analyzeSite}">Analyze</button>
-</div>
+        <input
+          type="text"
+          placeholder="Enter site URL to analyze..."
+          @input="${this.updateSearchTerm}"
+        />
+        <button @click="${this.analyzeSite}">Analyze</button>
+      </div>
 
-
+     
       <div class="search-bar">
         <input
           type="text"
-          placeholder="Search..."
+          placeholder="Search through pages..."
           @input="${this.updateSearchTerm}"
         />
       </div>
