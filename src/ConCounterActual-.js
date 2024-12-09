@@ -63,76 +63,62 @@ class CounterApp extends LitElement {
 
   updateSeed() {
     this.seed = this.generateSeed();
-    // Update the URL without reloading the page
     const url = `${window.location.origin}${window.location.pathname}?seed=${this.seed}`;
     window.history.replaceState(null, '', url);
   }
-
   handleHatChange(e) {
     this.hat = e.target.value;
     this.updateSeed();
   }
-
   handleBaseChange(e) {
     this.base = Number(e.target.value);
     this.updateSeed();
   }
-
   handleFaceChange(e) {
     this.face = Number(e.target.value);
     this.updateSeed();
   }
-
   handleFaceItemChange(e) {
     this.faceItem = Number(e.target.value);
     this.updateSeed();
   }
-
   handleHairChange(e) {
     this.hair = Number(e.target.value);
     this.updateSeed();
   }
-
   handlePantsChange(e) {
     this.pants = Number(e.target.value);
     this.updateSeed();
   }
-
   handleShirtChange(e) {
     this.shirt = Number(e.target.value);
     this.updateSeed();
   }
-
   handleSkinChange(e) {
     this.skin = Number(e.target.value);
     this.updateSeed();
   }
-
   handleHatColorChange(e) {
     this.hatColor = Number(e.target.value);
     this.updateSeed();
   }
-
   handleFireChange(e) {
     this.fire = e.target.checked;
     this.updateSeed();
   }
-
   handleWalkingChange(e) {
     this.walking = e.target.checked;
     this.updateSeed();
   }
-
   handleCircleChange(e) {
     this.circle = e.target.checked;
     this.updateSeed();
   }
-
   handleShareClick() {
     const url = `${window.location.origin}${window.location.pathname}?seed=${this.seed}`;
     navigator.clipboard.writeText(url)
       .then(() => {
-        alert('Link copied to clipboard!');
+        alert('Link copied');
       })
       .catch(err => {
         alert('Failed to copy link: ' + err);
