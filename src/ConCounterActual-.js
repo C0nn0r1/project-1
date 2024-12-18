@@ -2,10 +2,50 @@ import { LitElement, html, css } from 'lit';
 import { WiredButton } from 'wired-elements/lib/wired-button.js';
 import { WiredInput } from 'wired-elements/lib/wired-input.js';
 import { WiredCheckbox } from 'wired-elements/lib/wired-checkbox.js';
+import { WiredCard } from 'wired-elements/lib/wired-card.js';
 import "@haxtheweb/rpg-character/rpg-character.js";
 import "wired-elements";
 
 class CounterApp extends LitElement {
+  static styles = css`
+    :host {
+      display: block;
+      background-color: #f0f0f0;
+      background-image: 
+        linear-gradient(#e0e0e0 1px, transparent 1px),
+        linear-gradient(90deg, #e0e0e0 1px, transparent 1px);
+      background-size: 20px 20px;
+      min-height: 100vh;
+      padding: 20px;
+      box-sizing: border-box;
+    }
+    .banner-container {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+    .container {
+      display: flex;
+      gap: 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .character-area, .controls-area {
+      background: white;
+      padding: 20px;
+      border-radius: 10px;
+    }
+    .controls-area {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    select {
+      margin-bottom: 10px;
+      padding: 5px;
+    }
+  `;
+
   static properties = {
     hat: { type: String },
     base: { type: Number },
@@ -127,6 +167,11 @@ class CounterApp extends LitElement {
 
   render() {
     return html`
+      <div class="banner-container">
+        <wired-card elevation="3">
+          <h1 style="margin: 10px; text-align: center;">RPG Character Creator</h1>
+        </wired-card>
+      </div>
       <div class="container">
         <div class="character-area">
           <rpg-character
@@ -241,7 +286,7 @@ class CounterApp extends LitElement {
           <wired-button @click="${this.handleShareClick}">
             Share
           </wired-button>
-          <p>Copy the link to share your character!</p>
+          <p>Copy the link to share!</p>
         </div>
       </div>
     `;
